@@ -90,7 +90,9 @@ namespace CircleLine
         float scrollOffsetX = 0f;
         bool autoHideMode = false;
         bool isCollapsed = false;
+        bool manuallyCollapsed = false;
         DateTime lastMouseInsideUtc = DateTime.UtcNow;
+        DateTime lastCollapsedUtc = DateTime.MinValue;
 
         readonly System.Windows.Forms.Timer physicsTimer;
         readonly System.Windows.Forms.Timer edgeWatchTimer;
@@ -145,6 +147,7 @@ namespace CircleLine
             ShowInTaskbar = false;
             DoubleBuffered = true;
             AllowDrop = true;
+            KeyPreview = true;
             BackColor = ColBgDeep;
 
             try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
@@ -257,6 +260,7 @@ namespace CircleLine
         void ExpandBar()
         {
             lastMouseInsideUtc = DateTime.UtcNow;
+            manuallyCollapsed = false;
             if (isCollapsed)
             {
                 ApplyWindowGeometry(false);
@@ -270,11 +274,34 @@ namespace CircleLine
             }
         }
 
-        void CollapseBar()
+        void CollapseBar(bool manual = false)
         {
+            if (manual) manuallyCollapsed = true;
+            lastCollapsedUtc = DateTime.UtcNow;
             if (!isCollapsed)
             {
                 ApplyWindowGeometry(true);
+            }
+        }
+
+        void ExitApplication()
+        {
+            try
+            {
+                SaveState();
+                if (cmrWatcher != null) cmrWatcher.EnableRaisingEvents = false;
+                if (tray != null) tray.Visible = false;
+            }
+            catch { }
+            Application.Exit();
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if (e.KeyCode == Keys.Escape)
+            {
+                CollapseBar(true);
             }
         }
 
@@ -401,7 +428,7 @@ namespace CircleLine
             if (insideWindow)
             {
                 lastMouseInsideUtc = DateTime.UtcNow;
-                if (isCollapsed)
+                if (isCollapsed && autoHideMode && !manuallyCollapsed && (DateTime.UtcNow - lastCollapsedUtc).TotalSeconds > 2.0)
                 {
                     ExpandBar();
                 }
@@ -410,9 +437,10 @@ namespace CircleLine
             {
                 // If user brings mouse to the top center edge while dragging a file or in auto-hide mode
                 Rectangle scr = Screen.PrimaryScreen.Bounds;
-                bool nearTopCenter = cur.Y <= scr.Top + 10 && cur.X >= scr.Left + 180 && cur.X <= scr.Right - 180;
+                bool nearTopCenter = autoHideMode && !manuallyCollapsed && (DateTime.UtcNow - lastCollapsedUtc).TotalSeconds > 2.0
+                    && cur.Y <= scr.Top + 6 && cur.X >= scr.Left + 240 && cur.X <= scr.Right - 240;
                 bool leftMousePressed = (GetAsyncKeyState(0x01) & 0x8000) != 0;
-                bool draggingNearTop = leftMousePressed && cur.Y <= scr.Top + 55;
+                bool draggingNearTop = leftMousePressed && cur.Y <= scr.Top + 35 && Bounds.Contains(new Point(cur.X, scr.Top + 5));
 
                 if (isCollapsed && (nearTopCenter || draggingNearTop))
                 {
@@ -422,7 +450,7 @@ namespace CircleLine
                 {
                     if ((DateTime.UtcNow - lastMouseInsideUtc).TotalSeconds > 1.25)
                     {
-                        CollapseBar();
+                        CollapseBar(false);
                     }
                 }
             }
@@ -528,13 +556,18 @@ namespace CircleLine
                 g.DrawLine(p, 0, 1, Width, 1);
                 g.DrawRectangle(p, 1, 1, Width - 2, Height - 2);
             }
-            using (Font f = new Font("Segoe UI Bold", 8.8f))
+            using (Font f = new Font("Segoe UI Bold", 8.6f))
             using (SolidBrush wb = new SolidBrush(ColWhite))
             using (SolidBrush ob = new SolidBrush(ColOrange))
             {
                 g.FillEllipse(ob, 12, 7, 13, 13);
-                string txt = string.Format("CIRCLELINE  •  {0} Mandal Asılı  (Fareyi Yaklaştır / Sürükle)", items.Count);
+                string txt = string.Format("CIRCLELINE  •  {0} Mandal  (Açmak İçin Tıkla)", items.Count);
                 g.DrawString(txt, f, wb, 32, 5);
+
+                // Close '✕' button on right side of collapsed pill
+                Rectangle closeR = new Rectangle(Width - 30, 3, 24, Height - 6);
+                g.FillRectangle(ob, closeR);
+                g.DrawString("✕", f, wb, closeR.X + 6, closeR.Y + 2);
             }
         }
 
@@ -585,9 +618,10 @@ namespace CircleLine
             AddActionBtn(ref x, "act_agy", "🚀 Antigravity Paketi", 136, true);
 
             // Right-side window mode controls
-            int rx = Width - 12;
-            AddRightBtn(ref rx, "act_hide", "▲ Gizle", 62, false);
-            AddRightBtn(ref rx, "act_autohide", autoHideMode ? "🧲 Oto-Gizle: AÇIK" : "📌 Sabit İp", 118, autoHideMode);
+            int rx = Width - 10;
+            AddRightBtn(ref rx, "act_exit", "✕ Kapat", 68, true);
+            AddRightBtn(ref rx, "act_hide", "▲ Küçült", 68, false);
+            AddRightBtn(ref rx, "act_autohide", autoHideMode ? "🧲 Oto-Gizle: AÇIK" : "📌 Sabit İp", 114, autoHideMode);
 
             using (Font f = new Font("Segoe UI Semibold", 8.2f))
             {
@@ -880,7 +914,7 @@ namespace CircleLine
 
             if (isCollapsed)
             {
-                ExpandBar();
+                Cursor = Cursors.Hand;
                 return;
             }
 
@@ -993,6 +1027,16 @@ namespace CircleLine
 
             if (isCollapsed)
             {
+                if (e.Button == MouseButtons.Right)
+                {
+                    tray.ContextMenuStrip.Show(PointToScreen(e.Location));
+                    return;
+                }
+                if (e.X >= Width - 34)
+                {
+                    ExitApplication();
+                    return;
+                }
                 ExpandBar();
                 return;
             }
@@ -1447,7 +1491,10 @@ namespace CircleLine
                     SaveState();
                     break;
                 case "act_hide":
-                    CollapseBar();
+                    CollapseBar(true);
+                    break;
+                case "act_exit":
+                    ExitApplication();
                     break;
             }
         }
