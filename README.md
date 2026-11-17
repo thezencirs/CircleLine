@@ -55,3 +55,19 @@ Harici NuGet paketi veya SDK gerektirmez; Windows ile gelen yerleşik `.NET Fram
 
 - **Lisans:** Bu proje **MIT Lisansı** altında açık kaynak olarak sunulmaktadır (`Copyright (c) 2026 thezencirs`). Ayrıntılar için [LICENSE](LICENSE) dosyasına bakın.
 - **Marka Beyanı:** `CircleLine`, **thezencirs** tarafından sıfırdan geliştirilmiş bağımsız ve özgün bir yazılımdır. Dokümantasyonda adı geçen *Windows*, *3ds Max*, *AutoCAD*, *Revit*, *SketchUp*, *Blender*, *Tendedero* veya *ClipBoardLine* ilgili sahiplerinin ticari markalarıdır; bu projeyle herhangi bir resmi ortaklık veya bağlılıkları yoktur.
+
+---
+
+## 🧩 Part of the Circle Zero-Bloat Windows Suite (y @thezencirs)
+
+| Tool | Size | What It Does | Shortcut / Highlight |
+| :--- | :---: | :--- | :--- |
+| 📌 **[CircleTools](https://github.com/thezencirs/CircleTools)** | ~31 KB | Pin any window **Always-on-Top** with a click-through #0078FF blue border (no 500 MB PowerToys bloat) | **Win + Ctrl + T** |
+| 🪢 **[CircleLine](https://github.com/thezencirs/CircleLine)** | ~85 KB | **0-RAM Pendulum-Physics Desktop Clothesline**: pin Polaroids, extract 5-color #HEX palettes, and auto-convert .webp/.heic to .png when dragged into **3ds Max / AutoCAD / Revit / Photoshop** | **Ctrl + Shift + L** / **Ctrl + Shift + X** |
+| 🖼️ **[CircleRef](https://github.com/thezencirs/CircleRef)** | ~55 KB | **Infinite-Canvas Reference Image Board** (open-source PureRef alternative) with global Always-on-Top and Click-Through Lock | **Ctrl + Alt + T** / **Ctrl + Alt + L** |
+| 📦 **[CircleRar](https://github.com/thezencirs/CircleRar)** | ~45 KB | **Clean Windows 10/11 Archive Manager** (RAR, ZIP, 7z, TAR, ISO) with single-line CircleRar ▸ context menu & AES-256 encryption | Explorer Right-Click |
+| 🎬 **[CircleMixRecord](https://github.com/thezencirs/CircleMixRecord)** | Studio | **Dual-Canvas (16:9 + 9:16) GPU Screen Recorder**, **Circle Meet** (6-digit PIN live screen share & remote control) & **Circle Edit 60 FPS Timelapse Studio** | **Ctrl + Shift + R** / **Alt + Q** |
+
+<div align="center">
+  <b>Crafted with ❤️ by <a href="https://github.com/thezencirs">@thezencirs</a> — Give a ⭐ Star if this tool speeds up your workflow!</b>
+</div>
